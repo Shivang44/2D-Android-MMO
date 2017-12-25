@@ -10,8 +10,10 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
@@ -26,6 +28,9 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import java.util.Iterator;
 
 public class GameScreen implements Screen {
+
+	private static final int FRAME_COLS = 3;
+	private static final int FRAME_ROWS = 4;
 	/*
 	SpriteBatch batch;
 	Texture img;
@@ -42,6 +47,10 @@ public class GameScreen implements Screen {
 	private AssetManager assetManager;
 	private TiledMap mainMap;
 	OrthogonalTiledMapRenderer renderer;
+	private Texture spriteSheet;
+	Animation<TextureRegion> spriteAnimation;
+	float stateTime;
+	private Sprite sprite;
 
 	public GameScreen(MobileMMO game) {
 		this.game = game;
@@ -55,6 +64,7 @@ public class GameScreen implements Screen {
 		// Load assets into asset manager
 		assetManager.load("tilemaps/main.tmx", TiledMap.class);
 		assetManager.load("music/magical-story.mp3", Music.class);
+		assetManager.load("sprites/sprite.png", Texture.class);
 
 
 		// Synchronously (block) load assets. TODO: Loading screen, while asynchronously loading assets with manager.update()
@@ -63,28 +73,44 @@ public class GameScreen implements Screen {
 		mainMap = assetManager.get("tilemaps/main.tmx");
 
 		// Set up camera
-		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 40, 20);	// Display 40 by 20 tiles (w, h)
+		float w = Gdx.graphics.getWidth();
+		float h = Gdx.graphics.getHeight();
+
+		// Constructs a new OrthographicCamera, using the given viewport width and height
+		// Height is multiplied by aspect ratio.
+		camera = new OrthographicCamera(20, 20 * (h / w));
+		camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
+		camera.update();
+		Gdx.app.log("MyTag", "width:" + camera.viewportWidth + " height: " + camera.viewportHeight);
 
 		// Render tile map and its layers
 		// 1/32 unit-scale allows us to map one "world unit" to exactly 1 32x32 tile.
 		float unitScale = 1 / 32f;
 		renderer = new OrthogonalTiledMapRenderer(mainMap, unitScale);
 
+		// Set up character sprite and animations
 
+		// Create a 2D array of TextureRegions of all of the frames in sprite sheet
 
-		/*mapSprite = new Sprite(new Texture(Gdx.files.internal("sc_map.png")));
-		mapSprite.setPosition(0, 0);
-		mapSprite.setSize(WORLD_WIDTH, WORLD_HEIGHT);
+		/*spriteSheet = assetManager.get("sprites/animation_sheet.png");
+		TextureRegion[][] tmp = TextureRegion.split(spriteSheet,
+													spriteSheet.getWidth() / FRAME_COLS,
+													spriteSheet.getHeight() / FRAME_ROWS);
 
+		// Flatten 2D Array
+		TextureRegion[] spriteFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
+		int index = 0;
+		for (int i = 0; i < FRAME_ROWS; i++) {
+			for (int j = 0; j < FRAME_COLS; j++) {
+				spriteFrames[index] = tmp[i][j];
+				index++;
+			}
+		}
 
-		// create the camera and the SpriteBatch
-		float w = Gdx.graphics.getWidth();
-		float h = Gdx.graphics.getHeight();
-		camera = new OrthographicCamera(30, 30 * (h/w));
-		camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
-		camera.update();*/
-
+		spriteAnimation = new Animation<TextureRegion>(0.025f, spriteFrames);
+		stateTime = 0f;*/
+		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"), 1, 1);
+		sprite.setPosition(0, 0);
 
 
 	}
@@ -111,6 +137,12 @@ public class GameScreen implements Screen {
 
 		game.batch.begin();
 		// font12.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20);
+		sprite.draw(game.batch);
+		// Draw current frame
+		/*stateTime += Gdx.graphics.getDeltaTime();
+		TextureRegion currentFrame = spriteAnimation.getKeyFrame(stateTime, true);
+		game.batch.draw(currentFrame, 0, 0, currentFrame.getRegionWidth()/4, currentFrame.getRegionHeight()/4);*/
+
 		game.batch.end();
 
 		// process user input
@@ -125,8 +157,8 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		camera.viewportWidth = 30f;
-		camera.viewportHeight = 30f * height/width;
+		camera.viewportWidth = 20f;
+		camera.viewportHeight = 20f * height/width;
 		camera.update();
 	}
 
