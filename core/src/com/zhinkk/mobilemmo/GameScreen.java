@@ -145,8 +145,12 @@ public class GameScreen implements Screen {
 			Vector3 touchPos = new Vector3();
 			touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 			camera.unproject(touchPos);
-			Gdx.app.log("mytag", touchPos.toString());
+
+			// Determine what was touched.
+			// [if
+			//Gdx.app.log("mytag", touchPos.toString());
 			sprite.setPosition(touchPos.x, touchPos.y);
+			camera.position.set(touchPos.x, touchPos.y, 0);
 		}
 
 	}
@@ -157,6 +161,7 @@ public class GameScreen implements Screen {
 		//camera.viewportHeight = 20f * height/width;
 		//camera.update();
 		viewport.update(width, height);
+		Gdx.app.log("mytag", "camera width: " + camera.viewportWidth + " hgiht: " + camera.viewportHeight);
 		camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
 		camera.update();
 
