@@ -104,9 +104,11 @@ public class GameScreen implements Screen {
 
 		spriteAnimation = new Animation<TextureRegion>(0.025f, spriteFrames);
 		stateTime = 0f;*/
-		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"), 1, 1);
+		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"));
+		Gdx.app.log("mytag", "origin x: " + sprite.getOriginX() + " origin y: " + sprite.getOriginY());
+		Gdx.app.log("mytag", "scale x: " + sprite.getScaleX() + " scale y: " + sprite.getScaleY());
 		sprite.setPosition(0, 0);
-
+		sprite.setSize(1, 2);
 
 	}
 
