@@ -149,6 +149,8 @@ public class GameScreen implements Screen {
 			// Determine what was touched.
 			// [if
 			//Gdx.app.log("mytag", touchPos.toString());
+			if(sprite.getX() < touchPos.x) {
+			}
 			sprite.setPosition(touchPos.x, touchPos.y);
 			camera.position.set(touchPos.x, touchPos.y, 0);
 		}
