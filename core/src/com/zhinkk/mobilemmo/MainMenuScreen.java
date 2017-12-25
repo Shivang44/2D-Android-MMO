@@ -3,6 +3,7 @@ package com.zhinkk.mobilemmo;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -14,7 +15,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
  * Created by Shivang on 12/19/2017.
  */
 
-class MainMenuScreen implements Screen {
+class MainMenuScreen extends InputAdapter implements Screen {
     private MobileMMO game;
     private OrthographicCamera camera;
     private Viewport viewport;
@@ -26,9 +27,14 @@ class MainMenuScreen implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false);
         viewport = new StretchViewport(854, 480, camera);
+        Gdx.input.setInputProcessor(this);
+    }
 
-
-
+    @Override
+    public boolean touchUp (int x, int y, int pointer, int button) {
+        game.setScreen(new GameScreen(game));
+        dispose();
+        return true; // return true to indicate the event was handled
     }
 
     /**
@@ -52,10 +58,7 @@ class MainMenuScreen implements Screen {
         font12.draw(game.batch, "Please login:", 100, 100);
         game.batch.end();
 
-        if (Gdx.input.isTouched()) {
-            game.setScreen(new GameScreen(game));
-            dispose();
-        }
+
     }
 
     /**

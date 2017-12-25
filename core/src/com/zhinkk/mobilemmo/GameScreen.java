@@ -2,6 +2,9 @@ package com.zhinkk.mobilemmo;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
@@ -15,6 +18,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.MathUtils;
@@ -28,7 +32,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.Iterator;
 
-public class GameScreen implements Screen {
+public class GameScreen extends InputAdapter implements Screen {
 
 	private static final int FRAME_COLS = 3;
 	private static final int FRAME_ROWS = 4;
@@ -52,6 +56,8 @@ public class GameScreen implements Screen {
 	Animation<TextureRegion> spriteAnimation;
 	float stateTime;
 	private Sprite sprite;
+	private PlayerMovement playerMovement;
+	private TiledMapTileLayer walkableLayer;
 
 	public GameScreen(MobileMMO game) {
 		this.game = game;
@@ -71,7 +77,7 @@ public class GameScreen implements Screen {
 		// Synchronously (block) load assets. TODO: Loading screen, while asynchronously loading assets with manager.update()
 		assetManager.finishLoading();
 		mainMap = assetManager.get("tilemaps/main.tmx");
-
+		walkableLayer = (TiledMapTileLayer) mainMap.getLayers().get("Walkable");
 
 		// Constructs a new OrthographicCamera, using the given viewport width and height
 		// Height is multiplied by aspect ratio.
@@ -83,30 +89,17 @@ public class GameScreen implements Screen {
 		float unitScale = 1 / 32f;
 		renderer = new OrthogonalTiledMapRenderer(mainMap, unitScale);
 
-		// Set up character sprite and animations
-
-		// Create a 2D array of TextureRegions of all of the frames in sprite sheet
-
-		/*spriteSheet = assetManager.get("sprites/animation_sheet.png");
-		TextureRegion[][] tmp = TextureRegion.split(spriteSheet,
-													spriteSheet.getWidth() / FRAME_COLS,
-													spriteSheet.getHeight() / FRAME_ROWS);
-
-		// Flatten 2D Array
-		TextureRegion[] spriteFrames = new TextureRegion[FRAME_COLS * FRAME_ROWS];
-		int index = 0;
-		for (int i = 0; i < FRAME_ROWS; i++) {
-			for (int j = 0; j < FRAME_COLS; j++) {
-				spriteFrames[index] = tmp[i][j];
-				index++;
-			}
-		}
-
-		spriteAnimation = new Animation<TextureRegion>(0.025f, spriteFrames);
-		stateTime = 0f;*/
 		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"));
 		sprite.setPosition(0, 0);
 		sprite.setSize(1, 2);
+
+		playerMovement = new PlayerMovement(sprite, camera);
+		InputMultiplexer multiplexer = new InputMultiplexer();
+		// multiplexer.addProcessor(new MyUiInputProcessor());
+		multiplexer.addProcessor(this);
+		Gdx.input.setInputProcessor(multiplexer);
+
+		touchPos = new Vector3();
 
 	}
 
@@ -131,39 +124,20 @@ public class GameScreen implements Screen {
 		game.batch.setProjectionMatrix(camera.combined);
 
 		game.batch.begin();
-		// font12.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20);
 		sprite.draw(game.batch);
-		// Draw current frame
-		/*stateTime += Gdx.graphics.getDeltaTime();
-		TextureRegion currentFrame = spriteAnimation.getKeyFrame(stateTime, true);
-		game.batch.draw(currentFrame, 0, 0, currentFrame.getRegionWidth()/4, currentFrame.getRegionHeight()/4);*/
-
 		game.batch.end();
 
-		// process user input
-		if (Gdx.input.isTouched()) {
-			Vector3 touchPos = new Vector3();
-			touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-			camera.unproject(touchPos);
+		// Handle player movement
+		playerMovement.handleMovement();
 
-			// Determine what was touched.
-			// [if
-			//Gdx.app.log("mytag", touchPos.toString());
-			if(sprite.getX() < touchPos.x) {
-			}
-			sprite.setPosition(touchPos.x, touchPos.y);
-			camera.position.set(touchPos.x, touchPos.y, 0);
-		}
+		// Make camera follow player
+		camera.position.set(sprite.getX(), sprite.getY(), 0);
 
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		//camera.viewportWidth = 20f;
-		//camera.viewportHeight = 20f * height/width;
-		//camera.update();
 		viewport.update(width, height);
-		Gdx.app.log("mytag", "camera width: " + camera.viewportWidth + " hgiht: " + camera.viewportHeight);
 		camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
 		camera.update();
 
@@ -195,6 +169,22 @@ public class GameScreen implements Screen {
 	@Override
 	public void dispose() {
 		assetManager.dispose();
+	}
+
+	@Override
+	public boolean touchUp (int x, int y, int pointer, int button) {
+		touchPos.set(x, y, 0);
+		camera.unproject(touchPos);
+
+		// Determine if tapped tile is walkable.
+		if (walkableLayer.getCell(Math.round(touchPos.x), Math.round(touchPos.y)) != null) {
+			Gdx.app.log("gamescreen", "You can walk here.");
+			playerMovement.moveTo(x, y);
+		} else {
+			Gdx.app.log("gamescreen", "You can't walk here.");
+		}
+		
+		return true; // return true to indicate the event was handled
 	}
 
 }
