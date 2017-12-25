@@ -22,6 +22,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -69,19 +70,13 @@ public class GameScreen implements Screen {
 
 		// Synchronously (block) load assets. TODO: Loading screen, while asynchronously loading assets with manager.update()
 		assetManager.finishLoading();
-
 		mainMap = assetManager.get("tilemaps/main.tmx");
 
-		// Set up camera
-		float w = Gdx.graphics.getWidth();
-		float h = Gdx.graphics.getHeight();
 
 		// Constructs a new OrthographicCamera, using the given viewport width and height
 		// Height is multiplied by aspect ratio.
-		camera = new OrthographicCamera(20, 20 * (h / w));
-		camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
-		camera.update();
-		Gdx.app.log("MyTag", "width:" + camera.viewportWidth + " height: " + camera.viewportHeight);
+		camera = new OrthographicCamera();
+		viewport = new ExtendViewport(12, 12, camera);
 
 		// Render tile map and its layers
 		// 1/32 unit-scale allows us to map one "world unit" to exactly 1 32x32 tile.
@@ -157,9 +152,13 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		camera.viewportWidth = 20f;
-		camera.viewportHeight = 20f * height/width;
+		//camera.viewportWidth = 20f;
+		//camera.viewportHeight = 20f * height/width;
+		//camera.update();
+		viewport.update(width, height);
+		camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
 		camera.update();
+
 	}
 
 	@Override
