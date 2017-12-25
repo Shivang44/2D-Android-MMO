@@ -105,8 +105,6 @@ public class GameScreen implements Screen {
 		spriteAnimation = new Animation<TextureRegion>(0.025f, spriteFrames);
 		stateTime = 0f;*/
 		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"));
-		Gdx.app.log("mytag", "origin x: " + sprite.getOriginX() + " origin y: " + sprite.getOriginY());
-		Gdx.app.log("mytag", "scale x: " + sprite.getScaleX() + " scale y: " + sprite.getScaleY());
 		sprite.setPosition(0, 0);
 		sprite.setSize(1, 2);
 
@@ -143,12 +141,13 @@ public class GameScreen implements Screen {
 		game.batch.end();
 
 		// process user input
-		/*if (Gdx.input.isTouched()) {
+		if (Gdx.input.isTouched()) {
 			Vector3 touchPos = new Vector3();
 			touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 			camera.unproject(touchPos);
-
-		}*/
+			Gdx.app.log("mytag", touchPos.toString());
+			sprite.setPosition(touchPos.x, touchPos.y);
+		}
 
 	}
 
