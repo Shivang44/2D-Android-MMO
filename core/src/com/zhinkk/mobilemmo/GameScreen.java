@@ -58,6 +58,9 @@ public class GameScreen extends InputAdapter implements Screen {
 	private Sprite sprite;
 	private PlayerMovement playerMovement;
 	private TiledMapTileLayer walkableLayer;
+	boolean drawRect;
+	private Texture selectedSuccessRect;
+	private Texture selectedFailureRect;
 
 	public GameScreen(MobileMMO game) {
 		this.game = game;
@@ -72,12 +75,19 @@ public class GameScreen extends InputAdapter implements Screen {
 		assetManager.load("tilemaps/main.tmx", TiledMap.class);
 		assetManager.load("music/magical-story.mp3", Music.class);
 		assetManager.load("sprites/sprite.png", Texture.class);
+		assetManager.load("sprites/selected_success.png", Texture.class);
+		assetManager.load("sprites/selected_failure.png", Texture.class);
 
 
 		// Synchronously (block) load assets. TODO: Loading screen, while asynchronously loading assets with manager.update()
 		assetManager.finishLoading();
 		mainMap = assetManager.get("tilemaps/main.tmx");
 		walkableLayer = (TiledMapTileLayer) mainMap.getLayers().get("Walkable");
+
+		// Rectangles for drawing target position
+		 selectedSuccessRect = assetManager.get("sprites/selected_success.png");
+		 selectedFailureRect = assetManager.get("sprites/selected_failure.png");
+
 
 		// Constructs a new OrthographicCamera, using the given viewport width and height
 		// Height is multiplied by aspect ratio.
@@ -125,13 +135,21 @@ public class GameScreen extends InputAdapter implements Screen {
 
 		game.batch.begin();
 		sprite.draw(game.batch);
-		game.batch.end();
 
 		// Handle player movement
 		playerMovement.handleMovement();
 
 		// Make camera follow player
 		camera.position.set(sprite.getX(), sprite.getY(), 0);
+
+		if (drawRect) {
+			game.batch.draw(selectedSuccessRect, touchPos.x, touchPos.y, 1, 1);
+		}
+
+
+
+		game.batch.end();
+
 
 	}
 
@@ -173,17 +191,25 @@ public class GameScreen extends InputAdapter implements Screen {
 
 	@Override
 	public boolean touchUp (int x, int y, int pointer, int button) {
+		Gdx.app.log("gamescreen", "touchUp: " + x + ", " + y);
 		touchPos.set(x, y, 0);
 		camera.unproject(touchPos);
 
 		// Determine if tapped tile is walkable.
 		if (walkableLayer.getCell(Math.round(touchPos.x), Math.round(touchPos.y)) != null) {
+			Gdx.app.log("gamescreen", touchPos.toString());
+
+			// Draw green rectangle around that tile
+			drawRect = true;
 			Gdx.app.log("gamescreen", "You can walk here.");
+
 			playerMovement.moveTo(x, y);
 		} else {
+			// Draw red rectangle around that tile
+			drawRect = false;
 			Gdx.app.log("gamescreen", "You can't walk here.");
 		}
-		
+
 		return true; // return true to indicate the event was handled
 	}
 
