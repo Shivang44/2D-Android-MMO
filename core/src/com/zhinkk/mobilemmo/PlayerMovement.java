@@ -14,6 +14,7 @@ public class PlayerMovement {
     private  boolean moving;
     private Vector3 target;
     private Camera camera;
+    private boolean isMoving;
 
 
 
@@ -28,6 +29,10 @@ public class PlayerMovement {
         // Find path from playerSprite to target
     }
 
+    public boolean isMoving() {
+        return this.moving;
+    }
+
     public void moveTo(int screenX, int screenY) {
         target.set(screenX, screenY, 0);
         camera.unproject(target);
@@ -37,6 +42,8 @@ public class PlayerMovement {
 
     public void handleMovement() {
         if (!moving) return;
+        playerSprite.setPosition(Math.round(target.x), Math.round(target.y));
+        moving = true;
         // Gdx.app.log("playermovement", "Moving player!");
     }
 

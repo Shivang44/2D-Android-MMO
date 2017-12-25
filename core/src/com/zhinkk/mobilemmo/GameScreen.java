@@ -45,7 +45,6 @@ public class GameScreen extends InputAdapter implements Screen {
 	private Vector3 touchPos;
 	private MobileMMO game;
 	private Viewport viewport;
-	//private Sprite mapSprite;
 	static final int WORLD_WIDTH = 100;
 	static final int WORLD_HEIGHT = 100;
 	private Music mainMusic;
@@ -54,13 +53,12 @@ public class GameScreen extends InputAdapter implements Screen {
 	OrthogonalTiledMapRenderer renderer;
 	private Texture spriteSheet;
 	Animation<TextureRegion> spriteAnimation;
-	float stateTime;
 	private Sprite sprite;
 	private PlayerMovement playerMovement;
 	private TiledMapTileLayer walkableLayer;
 	boolean drawRect;
 	private Texture selectedSuccessRect;
-	private Texture selectedFailureRect;
+	boolean targetTileWalkable;
 
 	public GameScreen(MobileMMO game) {
 		this.game = game;
@@ -86,7 +84,6 @@ public class GameScreen extends InputAdapter implements Screen {
 
 		// Rectangles for drawing target position
 		 selectedSuccessRect = assetManager.get("sprites/selected_success.png");
-		 selectedFailureRect = assetManager.get("sprites/selected_failure.png");
 
 
 		// Constructs a new OrthographicCamera, using the given viewport width and height
@@ -142,8 +139,9 @@ public class GameScreen extends InputAdapter implements Screen {
 		// Make camera follow player
 		camera.position.set(sprite.getX(), sprite.getY(), 0);
 
-		if (drawRect) {
-			game.batch.draw(selectedSuccessRect, touchPos.x, touchPos.y, 1, 1);
+		// Draw green rect until player is done moving
+		if (playerMovement.isMoving()) {
+			game.batch.draw(selectedSuccessRect, Math.round(touchPos.x), Math.round(touchPos.y), 1, 1);
 		}
 
 
@@ -197,16 +195,13 @@ public class GameScreen extends InputAdapter implements Screen {
 
 		// Determine if tapped tile is walkable.
 		if (walkableLayer.getCell(Math.round(touchPos.x), Math.round(touchPos.y)) != null) {
-			Gdx.app.log("gamescreen", touchPos.toString());
-
 			// Draw green rectangle around that tile
-			drawRect = true;
+			targetTileWalkable = true;
 			Gdx.app.log("gamescreen", "You can walk here.");
 
+			// Move player to that tile
 			playerMovement.moveTo(x, y);
 		} else {
-			// Draw red rectangle around that tile
-			drawRect = false;
 			Gdx.app.log("gamescreen", "You can't walk here.");
 		}
 
