@@ -1,15 +1,12 @@
 package com.zhinkk.mobilemmo;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
-import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -21,16 +18,9 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-
-import java.util.Iterator;
 
 public class GameScreen extends InputAdapter implements Screen {
 
@@ -189,18 +179,23 @@ public class GameScreen extends InputAdapter implements Screen {
 
 	@Override
 	public boolean touchUp (int x, int y, int pointer, int button) {
-		Gdx.app.log("gamescreen", "touchUp: " + x + ", " + y);
+		// TODO: Determine for sure if player is intending to move
 		touchPos.set(x, y, 0);
 		camera.unproject(touchPos);
+		Tile targetPos = new Tile(Math.round(touchPos.x), Math.round(touchPos.y));
 
-		// Determine if tapped tile is walkable.
-		if (walkableLayer.getCell(Math.round(touchPos.x), Math.round(touchPos.y)) != null) {
-			// Draw green rectangle around that tile
-			targetTileWalkable = true;
+		/* Determine if tapped tile is walkable. This is done in two steps:
+		 * 1. Check if tile is actually a "walkable" tile (as defined in the tilemap). E.g., a road.
+		 * 2. Determine if a path exists from user to target. findpath() will also generate the shortest
+		 *    path using the A* algorithm.
+		 *
+		 */
+		if (walkableLayer.getCell(targetPos.x, targetPos.y) != null && playerMovement.findPath(targetPos, walkableLayer)) {
 			Gdx.app.log("gamescreen", "You can walk here.");
 
 			// Move player to that tile
-			playerMovement.moveTo(x, y);
+			playerMovement.moveTo(targetPos, walkableLayer);
+
 		} else {
 			Gdx.app.log("gamescreen", "You can't walk here.");
 		}
