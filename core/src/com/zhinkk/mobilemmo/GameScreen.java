@@ -87,7 +87,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		renderer = new OrthogonalTiledMapRenderer(mainMap, unitScale);
 
 		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"));
-		sprite.setPosition(0, 0);
+		sprite.setPosition(4, 16);
 		sprite.setSize(1, 2);
 
 		playerMovement = new PlayerMovement(sprite, camera);
@@ -182,7 +182,9 @@ public class GameScreen extends InputAdapter implements Screen {
 		// TODO: Determine for sure if player is intending to move
 		touchPos.set(x, y, 0);
 		camera.unproject(touchPos);
+		if (Math.round(sprite.getX()) == Math.round(touchPos.x) && Math.round(sprite.getY()) == Math.round(touchPos.y)) return true;
 		Tile targetPos = new Tile(Math.round(touchPos.x), Math.round(touchPos.y));
+
 
 		/* Determine if tapped tile is walkable. This is done in two steps:
 		 * 1. Check if tile is actually a "walkable" tile (as defined in the tilemap). E.g., a road.

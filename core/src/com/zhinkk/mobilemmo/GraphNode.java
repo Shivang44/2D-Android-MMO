@@ -1,6 +1,8 @@
 package com.zhinkk.mobilemmo;
 
 
+import com.badlogic.gdx.ai.pfa.Graph;
+
 /**
  * Created by Shivang on 12/28/2017.
  */
@@ -26,8 +28,6 @@ public class GraphNode implements Comparable<GraphNode> {
     public int getY() {
         return y;
     }
-
-
 
     public void setF(int f) {
         this.f = f;
@@ -68,5 +68,20 @@ public class GraphNode implements Comparable<GraphNode> {
     @Override
     public int compareTo(GraphNode graphNode) {
         return this.f - graphNode.f;    // TODO: Check if this is valid
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        }
+
+        if (!(o instanceof GraphNode)) {
+            return false;
+        }
+
+        GraphNode other = (GraphNode) o;
+
+        return other.getX() == this.getX() && other.getY() == this.getY();
     }
 }

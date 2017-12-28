@@ -1,5 +1,6 @@
 package com.zhinkk.mobilemmo;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ai.pfa.Graph;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -32,14 +33,56 @@ public class PlayerMovement {
         this.moving = false;
         this.targetPos = new Tile();
         this.startingPos = new Tile();
-        this.path = new Array<GraphNode>();
     }
 
-    // private Array<GraphNode>
+    // Returns all adjacent neighbours to s, setting their position and F values.
+    private Array<GraphNode> neighbours(GraphNode S, TiledMapTileLayer walkableLayer) {
+        Array<GraphNode> neighbourArray = new Array<GraphNode>();
+        int g, h;
+
+        // Tile above
+        if (S.y + 1 < walkableLayer.getHeight() && walkableLayer.getCell(S.x, S.y+1) != null) {
+            g = S.getG() + 1;
+            h = Math.abs(targetPos.x - S.getX()) + Math.abs(targetPos.y - (S.getY()+1));
+            GraphNode top = new GraphNode(g, h);
+            top.setPosition(S.x, S.y +  1);
+            neighbourArray.add(top);
+        }
+
+        // Tile to the right
+        if (S.x + 1 < walkableLayer.getWidth() && walkableLayer.getCell(S.x+1, S.y) != null) {
+            g = S.getG() + 1;
+            h = Math.abs(targetPos.x - (S.getX()+1)) + Math.abs(targetPos.y - S.getY());
+            GraphNode right = new GraphNode(g, h);
+            right.setPosition(S.x+1, S.y);
+            neighbourArray.add(right);
+        }
+
+        // Tile below
+        if (S.y - 1 > 0 && walkableLayer.getCell(S.x, S.y-1) != null) {
+            g = S.getG() + 1;
+            h = Math.abs(targetPos.x - S.getX()) + Math.abs(targetPos.y - (S.getY()-1));
+            GraphNode below = new GraphNode(g, h);
+            below.setPosition(S.x, S.y -  1);
+            neighbourArray.add(below);
+        }
+
+        // Tile to the left
+        if (S.x - 1 > 0 && walkableLayer.getCell(S.x - 1, S.y) != null) {
+            g = S.getG() + 1;
+            h = Math.abs(targetPos.x - (S.getX()-1)) + Math.abs(targetPos.y - S.getY());
+            GraphNode right = new GraphNode(g, h);
+            right.setPosition(S.x-1, S.y);
+            neighbourArray.add(right);
+        }
+
+        return neighbourArray;
+    }
 
     // Finds shortest path from sprite's position to targetPosition using the A* algo.
     // Returns a boolean indicating whether path was found.
     public boolean findPath(Tile targetPos, TiledMapTileLayer walkableLayer) {
+        this.path = new Array<GraphNode>();
         // TODO: Use A* to fill the path array with a list of (x,y) points to walk along shortest path
         /* A* Algorithm definitions:
 
@@ -94,38 +137,36 @@ public class PlayerMovement {
             // 3. Get minimum F-value Tile, S, from open-list
             GraphNode S = minHeap.poll();
 
+
+
             // 4. Add tile S to closed list
             path.add(S);
+
+            if (S.getX() == targetPos.x && S.getY() == targetPos.y) {
+                return true; // Reached target!
+            }
 
             // 5.     For all adjacent tiles to S,
             // 6.         - If the tile is already in our closed list, ignore it
             // 7.         - If the tile is NOT in the open list , compute its F-score and add it
             // 8.         - If the tile IS in the open list, "relax" it.
 
-            // Check tile above
-            if (S.y + 1 < walkableLayer.getHeight() && walkableLayer.getCell(S.x, S.y + 1) != null) {
-                // Create top node object so we can search for it in our open/closed lists
-                GraphNode top = new GraphNode(g, h);
-                top.setPosition(S.x, S.y +  1);
-
+            for (GraphNode neighbour : neighbours(S, walkableLayer)) {
                 // 6. If tile is already in our closed list, ignore it
-                if (!path.contains(top, false)) {
-                    if (!minHeap.contains(top)) {
-                        g = S.getG() + 1;
-                        h = Math.abs(targetPos.x - S.x) + Math.abs(targetPos.y - (S.y + 1));
-                        top.setG(g);
-                        top.setH(h);
-                        minHeap.add(top);
+                if (!path.contains(neighbour, false)) {
+                    if (!minHeap.contains(neighbour)) {
+                        // 7. Otherwise, check if not in min heap. If not, compute F-score and add it.
+                        minHeap.add(neighbour);
                     } else {
                         // If it is in the open list, check if we need to relax it.
-
                         // Remove the top/north element from minHeap
                         Iterator<GraphNode> it = minHeap.iterator();
                         GraphNode s = null;
                         while (it.hasNext()) {
                             s = it.next();
-                            if (s.equals(top)) {
+                            if (s.equals(neighbour)) {
                                 it.remove();
+                                break;
                             }
                         }
 
@@ -139,14 +180,10 @@ public class PlayerMovement {
                     }
                 }
             }
-
-
-
-
-
         }
 
-        return true;
+        Gdx.app.log("playermovement", path.toString());
+        return false;   // Target not found!
     }
 
     public boolean isMoving() {
@@ -158,10 +195,9 @@ public class PlayerMovement {
     }
 
     public void handleMovement() {
-        //if (!moving) return;
-        //playerSprite.setPosition(Math.round(target.x), Math.round(target.y));
-        //moving = true;
-        // Gdx.app.log("playermovement", "Moving player!");
+        if (!moving) return;
+        playerSprite.setPosition(targetPos.x, targetPos.y);
+        moving = false;
     }
 
 
