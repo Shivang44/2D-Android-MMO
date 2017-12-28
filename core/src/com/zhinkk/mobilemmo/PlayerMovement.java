@@ -8,6 +8,9 @@ import com.badlogic.gdx.utils.Array;
 import com.zhinkk.mobilemmo.BinaryHeap;
 import com.badlogic.gdx.utils.ObjectSet;
 
+import java.util.Iterator;
+import java.util.PriorityQueue;
+
 /**
  * Created by Shivang on 12/24/2017.
  */
@@ -31,6 +34,8 @@ public class PlayerMovement {
         this.startingPos = new Tile();
         this.path = new Array<GraphNode>();
     }
+
+    // private Array<GraphNode>
 
     // Finds shortest path from sprite's position to targetPosition using the A* algo.
     // Returns a boolean indicating whether path was found.
@@ -69,7 +74,7 @@ public class PlayerMovement {
         */
 
         // Min heap used to get lowest F-value node every time (false in constructor indicates minHeap)
-        BinaryHeap<GraphNode> minHeap = new BinaryHeap<GraphNode>(10000, false);
+        PriorityQueue<GraphNode> minHeap = new PriorityQueue<GraphNode>();
 
         // Set starting and ending positions
         this.startingPos.set(Math.round(playerSprite.getX()), Math.round(playerSprite.getY()));
@@ -80,15 +85,14 @@ public class PlayerMovement {
         // 1. Add starting node to min heap
         g = 0; // Distance from starting node to starting node is 0
         h = Math.abs(targetPos.x - startingPos.x) + Math.abs(targetPos.y - startingPos.y);
-        GraphNode starting = new GraphNode(g, h);
-        starting.setPosition(startingPos.x, startingPos.y);
         GraphNode startingNode = new GraphNode(g, h);
+        startingNode.setPosition(startingPos.x, startingPos.y);
         minHeap.add(startingNode);
 
         // 2. While heap is not empty
-        while (minHeap.size > 0) {
+        while (minHeap.size() > 0) {
             // 3. Get minimum F-value Tile, S, from open-list
-            GraphNode S = minHeap.pop();
+            GraphNode S = minHeap.poll();
 
             // 4. Add tile S to closed list
             path.add(S);
@@ -99,30 +103,46 @@ public class PlayerMovement {
             // 8.         - If the tile IS in the open list, "relax" it.
 
             // Check tile above
-            if (S.y - 1 > 0 && walkableLayer.getCell(S.x, S.y - 1) != null) {
-                g = S.getG() + 1;
-                h = Math.abs(targetPos.x - S.x) + Math.abs(targetPos.y - S.y - 1);
+            if (S.y + 1 < walkableLayer.getHeight() && walkableLayer.getCell(S.x, S.y + 1) != null) {
+                // Create top node object so we can search for it in our open/closed lists
                 GraphNode top = new GraphNode(g, h);
-                top.setPosition(S.x, S.y -  1);
-
+                top.setPosition(S.x, S.y +  1);
 
                 // 6. If tile is already in our closed list, ignore it
                 if (!path.contains(top, false)) {
                     if (!minHeap.contains(top)) {
+                        g = S.getG() + 1;
+                        h = Math.abs(targetPos.x - S.x) + Math.abs(targetPos.y - (S.y + 1));
+                        top.setG(g);
+                        top.setH(h);
                         minHeap.add(top);
                     } else {
-                        GraphNode s = minHeap.remove(top);
+                        // If it is in the open list, check if we need to relax it.
+
+                        // Remove the top/north element from minHeap
+                        Iterator<GraphNode> it = minHeap.iterator();
+                        GraphNode s = null;
+                        while (it.hasNext()) {
+                            s = it.next();
+                            if (s.equals(top)) {
+                                it.remove();
+                            }
+                        }
+
+                        // Relax it if needed
                         if (S.getG() + 1 < s.getG()) {
                             s.setG(S.getG() + 1);
-                            minHeap.add(s);
                         }
+
+                        // Add back to min heap
+                        minHeap.add(s);
                     }
                 }
             }
 
 
 
-            
+
 
         }
 

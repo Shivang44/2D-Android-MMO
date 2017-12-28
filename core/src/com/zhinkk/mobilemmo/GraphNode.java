@@ -1,13 +1,13 @@
 package com.zhinkk.mobilemmo;
 
-import com.zhinkk.mobilemmo.BinaryHeap;
 
 /**
  * Created by Shivang on 12/28/2017.
  */
 
 // TODO: Implement equals, string, hashcode
-public class GraphNode extends BinaryHeap.Node {
+// Write equals() based on x,y position ONLY
+public class GraphNode implements Comparable<GraphNode> {
     int f;
     int g;
     int h;
@@ -35,10 +35,12 @@ public class GraphNode extends BinaryHeap.Node {
 
     public void setG(int g) {
         this.g = g;
+        this.f = this.g + this.h;       // Update F
     }
 
     public void setH(int h) {
         this.h = h;
+        this.f = this.g + this.h;       // Update F
     }
 
     public int getF() {
@@ -54,15 +56,17 @@ public class GraphNode extends BinaryHeap.Node {
     }
 
 
+
     // Generates a graph node and sets "F" value (F = G + H in A* algorithm)
     public GraphNode(int g, int h) {
-        super(g+h);
         this.g = g;
         this.h = h;
         this.f = g + h;
     }
 
 
-
-
+    @Override
+    public int compareTo(GraphNode graphNode) {
+        return this.f - graphNode.f;    // TODO: Check if this is valid
+    }
 }
