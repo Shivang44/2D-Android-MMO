@@ -1,11 +1,12 @@
 package com.zhinkk.mobilemmo;
 
-import com.badlogic.gdx.utils.BinaryHeap;
+import com.zhinkk.mobilemmo.BinaryHeap;
 
 /**
  * Created by Shivang on 12/28/2017.
  */
 
+// TODO: Implement equals, string, hashcode
 public class GraphNode extends BinaryHeap.Node {
     int f;
     int g;
@@ -17,17 +18,16 @@ public class GraphNode extends BinaryHeap.Node {
         return x;
     }
 
-    public void setX(int x) {
+    public void setPosition(int x, int y) {
         this.x = x;
+        this.y = y;
     }
 
     public int getY() {
         return y;
     }
 
-    public void setY(int y) {
-        this.y = y;
-    }
+
 
     public void setF(int f) {
         this.f = f;
@@ -55,8 +55,11 @@ public class GraphNode extends BinaryHeap.Node {
 
 
     // Generates a graph node and sets "F" value (F = G + H in A* algorithm)
-    public GraphNode(float value) {
-        super(value);
+    public GraphNode(int g, int h) {
+        super(g+h);
+        this.g = g;
+        this.h = h;
+        this.f = g + h;
     }
 
 

@@ -1,10 +1,12 @@
 package com.zhinkk.mobilemmo;
 
+import com.badlogic.gdx.ai.pfa.Graph;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.BinaryHeap;
+import com.zhinkk.mobilemmo.BinaryHeap;
+import com.badlogic.gdx.utils.ObjectSet;
 
 /**
  * Created by Shivang on 12/24/2017.
@@ -65,14 +67,64 @@ public class PlayerMovement {
         *    9. Either we reached our target tile by now, or if the heap is empty and we haven't, target is not reachable.
         *
         */
+
         // Min heap used to get lowest F-value node every time (false in constructor indicates minHeap)
         BinaryHeap<GraphNode> minHeap = new BinaryHeap<GraphNode>(10000, false);
+
+        // Set starting and ending positions
         this.startingPos.set(Math.round(playerSprite.getX()), Math.round(playerSprite.getY()));
         this.targetPos = targetPos;
 
-        //
-        minHeap.add(new GraphNode())
+        int g, h; // Will be used for each node
 
+        // 1. Add starting node to min heap
+        g = 0; // Distance from starting node to starting node is 0
+        h = Math.abs(targetPos.x - startingPos.x) + Math.abs(targetPos.y - startingPos.y);
+        GraphNode starting = new GraphNode(g, h);
+        starting.setPosition(startingPos.x, startingPos.y);
+        GraphNode startingNode = new GraphNode(g, h);
+        minHeap.add(startingNode);
+
+        // 2. While heap is not empty
+        while (minHeap.size > 0) {
+            // 3. Get minimum F-value Tile, S, from open-list
+            GraphNode S = minHeap.pop();
+
+            // 4. Add tile S to closed list
+            path.add(S);
+
+            // 5.     For all adjacent tiles to S,
+            // 6.         - If the tile is already in our closed list, ignore it
+            // 7.         - If the tile is NOT in the open list , compute its F-score and add it
+            // 8.         - If the tile IS in the open list, "relax" it.
+
+            // Check tile above
+            if (S.y - 1 > 0 && walkableLayer.getCell(S.x, S.y - 1) != null) {
+                g = S.getG() + 1;
+                h = Math.abs(targetPos.x - S.x) + Math.abs(targetPos.y - S.y - 1);
+                GraphNode top = new GraphNode(g, h);
+                top.setPosition(S.x, S.y -  1);
+
+
+                // 6. If tile is already in our closed list, ignore it
+                if (!path.contains(top, false)) {
+                    if (!minHeap.contains(top)) {
+                        minHeap.add(top);
+                    } else {
+                        GraphNode s = minHeap.remove(top);
+                        if (S.getG() + 1 < s.getG()) {
+                            s.setG(S.getG() + 1);
+                            minHeap.add(s);
+                        }
+                    }
+                }
+            }
+
+
+
+            
+
+        }
 
         return true;
     }
