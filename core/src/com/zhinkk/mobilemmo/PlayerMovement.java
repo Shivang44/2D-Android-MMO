@@ -30,6 +30,7 @@ public class PlayerMovement {
     private Array<GraphNode> closedList;
     private GraphNode path;
     private float t;
+    private Tile previousTile;
     private static double EPSILON = 0.0000001;
 
 
@@ -232,6 +233,7 @@ public class PlayerMovement {
     public void startMoving() {
         moving = true;
         t = 0;
+        previousTile = new Tile(startingPos.x, startingPos.y);
     }
 
     boolean reachedTargetTile() {
@@ -247,14 +249,8 @@ public class PlayerMovement {
     public void handleMovement() {
         if (!moving) return;
 
+
         /*
-        if (reachedTargetTile()) {
-            Gdx.app.log("playermovement", "reached target!");
-            // Move playerSprite to exact tile position (e.g. (x,y) = (1,1) rather than (1.001, 1.003))
-            playerSprite.setPosition(targetPos.x, targetPos.y);
-            moving = false; // Finish current movement
-            return;
-        }
 
         if (reachedNextTileInPath()) {
             Gdx.app.log("playermovement", "Player reached next tile in path. Players position is: (" + playerSprite.getX() + ", " + playerSprite.getY() +")");
@@ -263,12 +259,27 @@ public class PlayerMovement {
 
         */
 
-        if (!reachedTargetTile()) {
-            // This allows us to translate from one tile to another over some time (i.e. 5 seconds)
-            t += Gdx.graphics.getDeltaTime() / 5;
-            float currentPos = ((targetPos.x - startingPos.x)*t) + startingPos.x;
-            playerSprite.setX(currentPos);
+        // This allows us to translate from one tile to another over some time (i.e. 5 seconds)
+        if (t < 1.0f) {
+            t += Gdx.graphics.getDeltaTime() / 0.2;
+            float currentPosX = ((path.x - previousTile.x)*t) + previousTile.x;
+            float currentPosY = ((path.y - previousTile.y)*t) + previousTile.y;
+            playerSprite.setPosition(currentPosX, currentPosY);
+            Gdx.app.log("playermovement", "value of t is : " + t);
+        } else if (t >= 1.0f && path.parent == null) {
+            // Reached target tile
+            Gdx.app.log("playermovement", "reached target!");
+            // Move playerSprite to exact tile position (e.g. (x,y) = (1,1) rather than (1.001, 1.003))
+            playerSprite.setPosition(targetPos.x, targetPos.y);
+            moving = false; // Finish current movement
+        } else {
+            // Reached next tile
+            Gdx.app.log("playermovement", "Reached next tile: " + t);
+            previousTile.set(path.x, path.y);
+            path = path.parent;
+            t = 0;
         }
+
 
 /*
         // Next tile in path is to right
