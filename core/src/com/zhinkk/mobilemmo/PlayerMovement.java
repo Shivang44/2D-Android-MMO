@@ -29,7 +29,7 @@ public class PlayerMovement {
     private boolean isMoving;
     private Array<GraphNode> closedList;
     private GraphNode path;
-
+    private float t;
     private static double EPSILON = 0.0000001;
 
 
@@ -175,6 +175,7 @@ public class PlayerMovement {
                 */
 
                 this.path = reverseLinkedList(S);
+                this.path = this.path.parent; // Skip starting node
                 GraphNode cur = this.path;
                 while (cur != null) {
                     Gdx.app.log("playermovement", cur.toString());
@@ -230,6 +231,7 @@ public class PlayerMovement {
 
     public void startMoving() {
         moving = true;
+        t = 0;
     }
 
     boolean reachedTargetTile() {
@@ -245,6 +247,7 @@ public class PlayerMovement {
     public void handleMovement() {
         if (!moving) return;
 
+        /*
         if (reachedTargetTile()) {
             Gdx.app.log("playermovement", "reached target!");
             // Move playerSprite to exact tile position (e.g. (x,y) = (1,1) rather than (1.001, 1.003))
@@ -258,6 +261,16 @@ public class PlayerMovement {
             path = path.parent; // Misleading, since linked list is reversed, parent = next tile in this case
         }
 
+        */
+
+        if (!reachedTargetTile()) {
+            // This allows us to translate from one tile to another over some time (i.e. 5 seconds)
+            t += Gdx.graphics.getDeltaTime() / 5;
+            float currentPos = ((targetPos.x - startingPos.x)*t) + startingPos.x;
+            playerSprite.setX(currentPos);
+        }
+
+/*
         // Next tile in path is to right
         if (playerSprite.getX() < path.getX()) {
             playerSprite.translateX(3 * Gdx.graphics.getDeltaTime());
@@ -281,7 +294,7 @@ public class PlayerMovement {
             playerSprite.translateY(-3 * Gdx.graphics.getDeltaTime());
             return;
         }
-
+*/
     }
 
 
