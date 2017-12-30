@@ -15,6 +15,11 @@ public class GraphNode implements Comparable<GraphNode> {
     int h;
     int x;
     int y;
+    GraphNode parent;
+
+    public void setParent(GraphNode parent) {
+        this.parent = parent;
+    }
 
     public int getX() {
         return x;

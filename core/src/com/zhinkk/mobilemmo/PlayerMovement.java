@@ -27,8 +27,8 @@ public class PlayerMovement {
     private Vector2 targetPosFloat;
     private Camera camera;
     private boolean isMoving;
-    private Array<GraphNode> path;
-    private int currentPathIndex;
+    private Array<GraphNode> closedList;
+    private GraphNode path;
 
     private static double EPSILON = 0.0000001;
 
@@ -41,8 +41,6 @@ public class PlayerMovement {
         this.startingPos = new Tile();
         this.currentPos = new Vector2();
         this.targetPosFloat = new Vector2();
-        this.currentPathIndex = 1; // 0th node is the starting tile
-        this.path = new Array<GraphNode>();
     }
 
     // Returns all adjacent neighbours to s, setting their position and F values.
@@ -89,6 +87,19 @@ public class PlayerMovement {
         return neighbourArray;
     }
 
+    private GraphNode reverseLinkedList(GraphNode head) {
+        if (head == null || head.parent == null) return head;
+        GraphNode prev = null;
+        GraphNode cur = head;
+        while (cur != null) {
+            GraphNode curNext = cur.parent;
+            cur.parent = prev;
+            prev = cur;
+            cur = curNext;
+        }
+        return prev;
+    }
+
     // Finds shortest path from sprite's position to targetPosition using the A* algo.
     // Returns a boolean indicating whether path was found.
     public boolean findPath(Tile targetPos, TiledMapTileLayer walkableLayer) {
@@ -120,11 +131,15 @@ public class PlayerMovement {
         *    4.     Add tile S to closed list (it is now in our shortest path)
         *    5.     For all adjacent tiles to S,
         *    6.         - If the tile is already in our closed list, ignore it
-        *    7.         - If the tile is NOT in the open list (minHeap), compute its F-score and add it
-        *    8.         - If the tile IS in the open list, "relax" it.
+        *    7.         - If the tile is NOT in the open list (minHeap), compute its F-score, set parent, and add it.
+        *    8.         - If the tile IS in the open list, "relax" it. Update parent if relaxing results in a shorter path to tile.
         *    9. Either we reached our target tile by now, or if the heap is empty and we haven't, target is not reachable.
+        *    10. If found target, generate shortest path by backtracking from
+        *           target to starting point by following parent pointers in each tile/GraphNode.
         *
         */
+
+        closedList = new Array<GraphNode>(); // Clear closed list
 
         // Min heap used to get lowest F-value node every time (false in constructor indicates minHeap)
         PriorityQueue<GraphNode> minHeap = new PriorityQueue<GraphNode>();
@@ -150,11 +165,20 @@ public class PlayerMovement {
 
 
             // 4. Add tile S to closed list
-            path.add(S);
+            closedList.add(S);
 
+            // Check if we reached our target
             if (S.getX() == targetPos.x && S.getY() == targetPos.y) {
-                for (GraphNode n : path) {
-                    Gdx.app.log("playermovement", n.toString());
+
+                /* Reversing the parent pointers in the linked list (target -> t-1 -> t-2 -> ... -> start)
+                *  allows us to generate the shortest path from the start to the target (start -> s+1 -> ... -> target)
+                */
+
+                this.path = reverseLinkedList(S);
+                GraphNode cur = this.path;
+                while (cur != null) {
+                    Gdx.app.log("playermovement", cur.toString());
+                    cur = cur.parent;
                 }
                 return true; // Reached target!
             }
@@ -166,9 +190,10 @@ public class PlayerMovement {
 
             for (GraphNode neighbour : neighbours(S, walkableLayer)) {
                 // 6. If tile is already in our closed list, ignore it
-                if (!path.contains(neighbour, false)) {
+                if (!closedList.contains(neighbour, false)) {
                     if (!minHeap.contains(neighbour)) {
-                        // 7. Otherwise, check if not in min heap. If not, compute F-score and add it.
+                        // 7. Otherwise, check if not in min heap. If not, compute F-score, set parent, and add it.
+                        neighbour.setParent(S);
                         minHeap.add(neighbour);
                     } else {
                         // If it is in the open list, check if we need to relax it.
@@ -185,6 +210,7 @@ public class PlayerMovement {
 
                         // Relax it if needed
                         if (S.getG() + 1 < s.getG()) {
+                            s.setParent(S);
                             s.setG(S.getG() + 1);
                         }
 
@@ -195,7 +221,6 @@ public class PlayerMovement {
             }
         }
 
-        Gdx.app.log("playermovement", path.toString());
         return false;   // Target not found!
     }
 
@@ -213,8 +238,8 @@ public class PlayerMovement {
     }
 
     boolean reachedNextTileInPath() {
-        return playerSprite.getX() >= path.get(currentPathIndex).getX() && playerSprite.getX() <= path.get(currentPathIndex).getX() + 1
-                && playerSprite.getY() >= path.get(currentPathIndex).getY() && playerSprite.getY() <= path.get(currentPathIndex).getY() + 1;
+        return playerSprite.getX() >= path.getX() && playerSprite.getX() <= path.getX() + 1
+                && playerSprite.getY() >= path.getY() && playerSprite.getY() <= path.getY() + 1;
     }
 
     public void handleMovement() {
@@ -225,36 +250,34 @@ public class PlayerMovement {
             // Move playerSprite to exact tile position (e.g. (x,y) = (1,1) rather than (1.001, 1.003))
             playerSprite.setPosition(targetPos.x, targetPos.y);
             moving = false; // Finish current movement
-            path = new Array<GraphNode>();  // Clear shortest path to target
-            currentPathIndex = 1;   // Reset current path in shortest path
             return;
         }
 
         if (reachedNextTileInPath()) {
             Gdx.app.log("playermovement", "Player reached next tile in path. Players position is: (" + playerSprite.getX() + ", " + playerSprite.getY() +")");
-            currentPathIndex++;
+            path = path.parent; // Misleading, since linked list is reversed, parent = next tile in this case
         }
 
         // Next tile in path is to right
-        if (playerSprite.getX() < path.get(currentPathIndex).getX()) {
+        if (playerSprite.getX() < path.getX()) {
             playerSprite.translateX(3 * Gdx.graphics.getDeltaTime());
             return;
         }
 
         // Next tile in path is to left
-        if (playerSprite.getX() > path.get(currentPathIndex).getX()) {
+        if (playerSprite.getX() > path.getX()) {
             playerSprite.translateX(-3 * Gdx.graphics.getDeltaTime());
             return;
         }
 
         // Next tile in path is above
-        if (playerSprite.getY() < path.get(currentPathIndex).getY()) {
+        if (playerSprite.getY() < path.getY()) {
             playerSprite.translateY(3 * Gdx.graphics.getDeltaTime());
             return;
         }
 
         // Next tile in path is below
-        if (playerSprite.getY() > path.get(currentPathIndex).getY()) {
+        if (playerSprite.getY() > path.getY()) {
             playerSprite.translateY(-3 * Gdx.graphics.getDeltaTime());
             return;
         }
