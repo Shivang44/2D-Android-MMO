@@ -10,10 +10,7 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -24,14 +21,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class GameScreen extends InputAdapter implements Screen {
 
-	private static final int FRAME_COLS = 3;
-	private static final int FRAME_ROWS = 4;
-	/*
-	SpriteBatch batch;
-	Texture img;
-	*/
 	private OrthographicCamera camera;
-	private SpriteBatch batch;
 	private Vector3 touchPos;
 	private MobileMMO game;
 	private Viewport viewport;
@@ -41,14 +31,10 @@ public class GameScreen extends InputAdapter implements Screen {
 	private AssetManager assetManager;
 	private TiledMap mainMap;
 	OrthogonalTiledMapRenderer renderer;
-	private Texture spriteSheet;
-	Animation<TextureRegion> spriteAnimation;
 	private Sprite sprite;
 	private PlayerMovement playerMovement;
 	private TiledMapTileLayer walkableLayer;
-	boolean drawRect;
 	private Texture selectedSuccessRect;
-	boolean targetTileWalkable;
 
 	public GameScreen(MobileMMO game) {
 		this.game = game;
@@ -73,8 +59,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		walkableLayer = (TiledMapTileLayer) mainMap.getLayers().get("Walkable");
 
 		// Rectangles for drawing target position
-		 selectedSuccessRect = assetManager.get("sprites/selected_success.png");
-
+		selectedSuccessRect = assetManager.get("sprites/selected_success.png");
 
 		// Constructs a new OrthographicCamera, using the given viewport width and height
 		// Height is multiplied by aspect ratio.
@@ -179,7 +164,6 @@ public class GameScreen extends InputAdapter implements Screen {
 
 	@Override
 	public boolean touchUp (int x, int y, int pointer, int button) {
-		// TODO: Determine for sure if player is intending to move
 		touchPos.set(x, y, 0);
 		camera.unproject(touchPos);
 
@@ -187,7 +171,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		if (Math.round(sprite.getX()) == Math.round(touchPos.x) && Math.round(sprite.getY()) == Math.round(touchPos.y)) return true;
 
 		// Set target tile
-		Tile targetPos = new Tile(Math.round(touchPos.x), Math.round(touchPos.y));
+		com.zhinkk.mobilemmo.DataStructures.Tile targetPos = new com.zhinkk.mobilemmo.DataStructures.Tile(Math.round(touchPos.x), Math.round(touchPos.y));
 
 
 		/* Determine if tapped tile is walkable. This is done in two steps:
@@ -196,7 +180,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		 *    path using the A* algorithm, so all that's left do do after it returns true is to start moving.
 		 *
 		 */
-		if (walkableLayer.getCell(targetPos.x, targetPos.y) != null && playerMovement.findPath(targetPos, walkableLayer)) {
+		if (walkableLayer.getCell(targetPos.getX(), targetPos.getY()) != null && playerMovement.findPath(targetPos, walkableLayer)) {
 			Gdx.app.log("gamescreen", "You can walk here.");
 
 			// Move player to that tile

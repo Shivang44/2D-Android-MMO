@@ -1,20 +1,26 @@
-package com.zhinkk.mobilemmo;
+package com.zhinkk.mobilemmo.DataStructures;
 
 
-import com.badlogic.gdx.ai.pfa.Graph;
 
 /**
  * Created by Shivang on 12/28/2017.
+ *
+ * This class is mainly to be used with a PriortyQueue in the context of the A* graph search algorithm.
+ * It includes fields for the position (x,y) along with score-values that are used in the A* graph search algorithm (f, g, h).
+ * It implements
  */
 
-// TODO: Implement equals, string, hashcode
-// Write equals() based on x,y position ONLY
 public class GraphNode implements Comparable<GraphNode> {
     int f;
     int g;
     int h;
     int x;
     int y;
+
+    public GraphNode getParent() {
+        return parent;
+    }
+
     GraphNode parent;
 
     public void setParent(GraphNode parent) {
@@ -80,6 +86,14 @@ public class GraphNode implements Comparable<GraphNode> {
         return "[(x,y) = " + this.x + ", " + this.y + "),   (f, g, h) = (" + this.f + ", " + this.g + ", " + this.h + ")";
     }
 
+
+
+    @Override
+    public int hashCode() {
+        return 31 * x + y;
+    }
+
+
     @Override
     public boolean equals(Object o) {
         if (o == this) {
@@ -87,6 +101,7 @@ public class GraphNode implements Comparable<GraphNode> {
         }
 
         if (!(o instanceof GraphNode)) {
+
             return false;
         }
 
@@ -94,4 +109,6 @@ public class GraphNode implements Comparable<GraphNode> {
 
         return other.getX() == this.getX() && other.getY() == this.getY();
     }
+
+
 }

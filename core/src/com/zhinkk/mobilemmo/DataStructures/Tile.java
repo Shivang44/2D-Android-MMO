@@ -1,18 +1,36 @@
-package com.zhinkk.mobilemmo;
+package com.zhinkk.mobilemmo.DataStructures;
 
 /**
  * Created by Shivang on 12/27/2017.
  */
 
 public class Tile {
+
     int x;
     int y;
 
-    Tile() {
+    public int getX() {
+        return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+
+    public Tile() {
         // Can be initialized later with set() method
     }
 
-    Tile(int x, int y) {
+    public Tile(int x, int y) {
         this.x = x;
         this. y= y;
     }

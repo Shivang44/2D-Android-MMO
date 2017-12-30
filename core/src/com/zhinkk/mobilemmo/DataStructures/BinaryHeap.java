@@ -14,7 +14,7 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.zhinkk.mobilemmo;
+package com.zhinkk.mobilemmo.DataStructures;
 
 /** @author Nathan Sweet */
 /** Modifications by Shivang Saxena to implement contains() method */
