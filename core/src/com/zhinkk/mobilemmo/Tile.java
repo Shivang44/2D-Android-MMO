@@ -22,10 +22,14 @@ public class Tile {
         this.y = y;
     }
 
-    // TODO: Implement equals() and hashCode()
+    // TODO:  hashCode()
     @Override
-    public boolean equals(Object other) {
-        return false;
+    public boolean equals(Object o) {
+        if (o == this) return true;
+        if (!(o instanceof Tile)) return false;
+        Tile other = (Tile) o;
+        return other.x == this.x && other.y == this.y;
+
     }
 
     @Override

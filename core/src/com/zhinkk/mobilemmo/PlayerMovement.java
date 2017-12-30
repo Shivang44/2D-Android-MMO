@@ -5,6 +5,8 @@ import com.badlogic.gdx.ai.pfa.Graph;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.zhinkk.mobilemmo.BinaryHeap;
 import com.badlogic.gdx.utils.ObjectSet;
@@ -21,10 +23,14 @@ public class PlayerMovement {
     private  boolean moving;
     private Tile targetPos;
     private Tile startingPos;
+    private Vector2 currentPos;
+    private Vector2 targetPosFloat;
     private Camera camera;
     private boolean isMoving;
     private Array<GraphNode> path;
+    private int currentPathIndex;
 
+    private static double EPSILON = 0.0000001;
 
 
     public PlayerMovement(Sprite sprite, Camera camera) {
@@ -33,6 +39,10 @@ public class PlayerMovement {
         this.moving = false;
         this.targetPos = new Tile();
         this.startingPos = new Tile();
+        this.currentPos = new Vector2();
+        this.targetPosFloat = new Vector2();
+        this.currentPathIndex = 1; // 0th node is the starting tile
+        this.path = new Array<GraphNode>();
     }
 
     // Returns all adjacent neighbours to s, setting their position and F values.
@@ -59,7 +69,7 @@ public class PlayerMovement {
         }
 
         // Tile below
-        if (S.y - 1 > 0 && walkableLayer.getCell(S.x, S.y-1) != null) {
+        if (S.y - 1 >= 0 && walkableLayer.getCell(S.x, S.y-1) != null) {
             g = S.getG() + 1;
             h = Math.abs(targetPos.x - S.getX()) + Math.abs(targetPos.y - (S.getY()-1));
             GraphNode below = new GraphNode(g, h);
@@ -68,7 +78,7 @@ public class PlayerMovement {
         }
 
         // Tile to the left
-        if (S.x - 1 > 0 && walkableLayer.getCell(S.x - 1, S.y) != null) {
+        if (S.x - 1 >= 0 && walkableLayer.getCell(S.x - 1, S.y) != null) {
             g = S.getG() + 1;
             h = Math.abs(targetPos.x - (S.getX()-1)) + Math.abs(targetPos.y - S.getY());
             GraphNode right = new GraphNode(g, h);
@@ -82,7 +92,7 @@ public class PlayerMovement {
     // Finds shortest path from sprite's position to targetPosition using the A* algo.
     // Returns a boolean indicating whether path was found.
     public boolean findPath(Tile targetPos, TiledMapTileLayer walkableLayer) {
-        this.path = new Array<GraphNode>();
+        Gdx.app.log("playermovement", "Player starting position is: " + "(" + playerSprite.getX() + ", " + playerSprite.getY() +")");
         // TODO: Use A* to fill the path array with a list of (x,y) points to walk along shortest path
         /* A* Algorithm definitions:
 
@@ -143,6 +153,9 @@ public class PlayerMovement {
             path.add(S);
 
             if (S.getX() == targetPos.x && S.getY() == targetPos.y) {
+                for (GraphNode n : path) {
+                    Gdx.app.log("playermovement", n.toString());
+                }
                 return true; // Reached target!
             }
 
@@ -190,14 +203,62 @@ public class PlayerMovement {
         return this.moving;
     }
 
-    public void moveTo(Tile targetPos, TiledMapTileLayer walkableLayer) {
+    public void startMoving() {
         moving = true;
+    }
+
+    boolean reachedTargetTile() {
+        return playerSprite.getX() >= targetPos.x && playerSprite.getX() <= targetPos.x + 1
+                && playerSprite.getY() >= targetPos.y && playerSprite.getY() <= targetPos.y + 1;
+    }
+
+    boolean reachedNextTileInPath() {
+        return playerSprite.getX() >= path.get(currentPathIndex).getX() && playerSprite.getX() <= path.get(currentPathIndex).getX() + 1
+                && playerSprite.getY() >= path.get(currentPathIndex).getY() && playerSprite.getY() <= path.get(currentPathIndex).getY() + 1;
     }
 
     public void handleMovement() {
         if (!moving) return;
-        playerSprite.setPosition(targetPos.x, targetPos.y);
-        moving = false;
+
+        if (reachedTargetTile()) {
+            Gdx.app.log("playermovement", "reached target!");
+            // Move playerSprite to exact tile position (e.g. (x,y) = (1,1) rather than (1.001, 1.003))
+            playerSprite.setPosition(targetPos.x, targetPos.y);
+            moving = false; // Finish current movement
+            path = new Array<GraphNode>();  // Clear shortest path to target
+            currentPathIndex = 1;   // Reset current path in shortest path
+            return;
+        }
+
+        if (reachedNextTileInPath()) {
+            Gdx.app.log("playermovement", "Player reached next tile in path. Players position is: (" + playerSprite.getX() + ", " + playerSprite.getY() +")");
+            currentPathIndex++;
+        }
+
+        // Next tile in path is to right
+        if (playerSprite.getX() < path.get(currentPathIndex).getX()) {
+            playerSprite.translateX(3 * Gdx.graphics.getDeltaTime());
+            return;
+        }
+
+        // Next tile in path is to left
+        if (playerSprite.getX() > path.get(currentPathIndex).getX()) {
+            playerSprite.translateX(-3 * Gdx.graphics.getDeltaTime());
+            return;
+        }
+
+        // Next tile in path is above
+        if (playerSprite.getY() < path.get(currentPathIndex).getY()) {
+            playerSprite.translateY(3 * Gdx.graphics.getDeltaTime());
+            return;
+        }
+
+        // Next tile in path is below
+        if (playerSprite.getY() > path.get(currentPathIndex).getY()) {
+            playerSprite.translateY(-3 * Gdx.graphics.getDeltaTime());
+            return;
+        }
+
     }
 
 

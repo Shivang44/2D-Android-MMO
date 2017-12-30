@@ -182,21 +182,25 @@ public class GameScreen extends InputAdapter implements Screen {
 		// TODO: Determine for sure if player is intending to move
 		touchPos.set(x, y, 0);
 		camera.unproject(touchPos);
+
+		// If clicked current tile, don't process movement.
 		if (Math.round(sprite.getX()) == Math.round(touchPos.x) && Math.round(sprite.getY()) == Math.round(touchPos.y)) return true;
+
+		// Set target tile
 		Tile targetPos = new Tile(Math.round(touchPos.x), Math.round(touchPos.y));
 
 
 		/* Determine if tapped tile is walkable. This is done in two steps:
-		 * 1. Check if tile is actually a "walkable" tile (as defined in the tilemap). E.g., a road.
+		 * 1. Check if tile is actually a "walkable" tile (as defined in the tilemap). E.g., a road. If it is, then:
 		 * 2. Determine if a path exists from user to target. findpath() will also generate the shortest
-		 *    path using the A* algorithm.
+		 *    path using the A* algorithm, so all that's left do do after it returns true is to start moving.
 		 *
 		 */
 		if (walkableLayer.getCell(targetPos.x, targetPos.y) != null && playerMovement.findPath(targetPos, walkableLayer)) {
 			Gdx.app.log("gamescreen", "You can walk here.");
 
 			// Move player to that tile
-			playerMovement.moveTo(targetPos, walkableLayer);
+			playerMovement.startMoving();
 
 		} else {
 			Gdx.app.log("gamescreen", "You can't walk here.");

@@ -71,6 +71,11 @@ public class GraphNode implements Comparable<GraphNode> {
     }
 
     @Override
+    public String toString() {
+        return "[(x,y) = " + this.x + ", " + this.y + "),   (f, g, h) = (" + this.f + ", " + this.g + ", " + this.h + ")";
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == this) {
             return true;
