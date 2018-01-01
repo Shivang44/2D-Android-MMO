@@ -2,7 +2,8 @@ package com.zhinkk.mobilemmo;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+//import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.zhinkk.mobilemmo.DataStructures.Sprite;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectSet;
@@ -28,6 +29,7 @@ public class PlayerMovement {
     private static double movementSpeed = 0.5;
 
 
+    /* Constructor sets up the player sprite, target position, and starting position. */
     public PlayerMovement(Sprite sprite, Camera camera) {
         this.playerSprite = sprite;
         this.moving = false;
@@ -257,7 +259,7 @@ public class PlayerMovement {
         return false;   // Target not found!
     }
 
-    // Simply returns if player is currently moving
+    // Simply returns whether player is currently moving
     public boolean isMoving() {
         return this.moving;
     }
@@ -269,10 +271,19 @@ public class PlayerMovement {
         this.previousTile = new Tile(startingPos.getX(), startingPos.getY());
     }
 
+    /*
+     * If currently moving (i.e. the user tapped a movable location and we found a walkable path to that location),
+     * this method will move along each node/tile in this.path (a singly linked-list) until it reaches the last
+     * node/tile (the user's target location).
+     */
     public void handleMovement() {
         if (!moving) return;
 
-        // This allows us to translate from one tile to another over some time (i.e. 5 seconds)
+        /* This logic allows us to translate from one tile to another over some time (i.e. 5 seconds), as defined by movement speed.
+         * timeSinceStartedMoving interpolates the user's position from start to end, meaning a value of 0 is the start, 0.5 is
+         * in the middle, and 1.0 is the end. Thus, when t=1.0, we can have reached the next node/tile in the path and can move
+         * onto translating the user to the next node/tile, and so on, until the target node/tile is reached.
+         */
         if (timeSinceStartedMoving < 1.0f) {
             timeSinceStartedMoving += Gdx.graphics.getDeltaTime() / movementSpeed;
             float currentPosX = ((path.getX() - previousTile.getX())*timeSinceStartedMoving) + previousTile.getX();
@@ -289,6 +300,14 @@ public class PlayerMovement {
             path = path.getParent();
             timeSinceStartedMoving = 0;
         }
+
+        /*
+        * if (moving forward) playerSprite.animate("forward")
+        * ..
+        * ..
+        * ..
+        *
+         */
 
     }
 

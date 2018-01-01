@@ -10,14 +10,18 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.zhinkk.mobilemmo.DataStructures.Tile;
+import com.zhinkk.mobilemmo.DataStructures.Sprite;
 
 public class GameScreen extends InputAdapter implements Screen {
 
@@ -41,6 +45,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
 		// Create asset manager
 		assetManager = new AssetManager();
+		touchPos = new Vector3();
 
 		// Needed to be able to load TMX maps
 		assetManager.setLoader(TiledMap.class, new TmxMapLoader(new InternalFileHandleResolver()));
@@ -55,6 +60,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
 		// Synchronously (block) load assets. TODO: Loading screen, while asynchronously loading assets with manager.update()
 		assetManager.finishLoading();
+
 		mainMap = assetManager.get("tilemaps/main.tmx");
 		walkableLayer = (TiledMapTileLayer) mainMap.getLayers().get("Walkable");
 
@@ -71,17 +77,28 @@ public class GameScreen extends InputAdapter implements Screen {
 		float unitScale = 1 / 32f;
 		renderer = new OrthogonalTiledMapRenderer(mainMap, unitScale);
 
-		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"));
-		sprite.setPosition(4, 16);
-		sprite.setSize(1, 2);
+		// Set up player sprite and sprite animations
+		setUpPlayerSprite();
 
+		// Set up player movement
 		playerMovement = new PlayerMovement(sprite, camera);
+
+		// Set up input processing
 		InputMultiplexer multiplexer = new InputMultiplexer();
 		// multiplexer.addProcessor(new MyUiInputProcessor());
 		multiplexer.addProcessor(this);
 		Gdx.input.setInputProcessor(multiplexer);
+	}
 
-		touchPos = new Vector3();
+	private void setUpPlayerSprite() {
+		ObjectMap<String, Animation<TextureRegion>> playerAnimations = new ObjectMap<String, Animation<TextureRegion>>();
+		playerAnimations.put("forwardWalk", new Animation<TextureRegion>());
+		playerAnimations.put("backwardWalk", new Animation<TextureRegion>());
+		playerAnimations.put("leftWalk", new Animation<TextureRegion>());
+		playerAnimations.put("rightWalk", new Animation<TextureRegion>());
+		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"), playerAnimations);
+		sprite.setPosition(4, 16);
+		sprite.setSize(1, 2);
 
 	}
 
@@ -159,6 +176,7 @@ public class GameScreen extends InputAdapter implements Screen {
 
 	@Override
 	public void dispose() {
+		sprite.getTexture().dispose();
 		assetManager.dispose();
 	}
 
@@ -171,7 +189,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		if (Math.round(sprite.getX()) == Math.round(touchPos.x) && Math.round(sprite.getY()) == Math.round(touchPos.y)) return true;
 
 		// Set target tile
-		com.zhinkk.mobilemmo.DataStructures.Tile targetPos = new com.zhinkk.mobilemmo.DataStructures.Tile(Math.round(touchPos.x), Math.round(touchPos.y));
+		Tile targetPos = new Tile(Math.round(touchPos.x), Math.round(touchPos.y));
 
 
 		/* Determine if tapped tile is walkable. This is done in two steps:
@@ -181,7 +199,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		 *
 		 */
 		if (walkableLayer.getCell(targetPos.getX(), targetPos.getY()) != null && playerMovement.findPath(targetPos, walkableLayer)) {
-			Gdx.app.log("gamescreen", "You can walk here.");
+			Gdx.app.log("gamescreen", "Found path to walkable tile. Walking there now.");
 
 			// Move player to that tile
 			playerMovement.startMoving();
