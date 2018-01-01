@@ -40,6 +40,9 @@ public class GameScreen extends InputAdapter implements Screen {
 	private TiledMapTileLayer walkableLayer;
 	private Texture selectedSuccessRect;
 
+	private static final int ANIMATION_SHEET_COLS = 3;
+	private static final int ANIMATION_SHEET_ROWS = 4;
+
 	public GameScreen(MobileMMO game) {
 		this.game = game;
 
@@ -54,6 +57,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		assetManager.load("tilemaps/main.tmx", TiledMap.class);
 		assetManager.load("music/magical-story.mp3", Music.class);
 		assetManager.load("sprites/sprite.png", Texture.class);
+		assetManager.load("sprites/animation_sheet.png", Texture.class);
 		assetManager.load("sprites/selected_success.png", Texture.class);
 		assetManager.load("sprites/selected_failure.png", Texture.class);
 
@@ -91,11 +95,15 @@ public class GameScreen extends InputAdapter implements Screen {
 	}
 
 	private void setUpPlayerSprite() {
+		Texture animationSheetTexture = assetManager.get("sprites/animation_sheet.png");
+		TextureRegion[][] animationSprites = TextureRegion.split(animationSheetTexture,
+				animationSheetTexture.getWidth() / ANIMATION_SHEET_COLS, animationSheetTexture.getHeight() / ANIMATION_SHEET_ROWS);
 		ObjectMap<String, Animation<TextureRegion>> playerAnimations = new ObjectMap<String, Animation<TextureRegion>>();
-		playerAnimations.put("forwardWalk", new Animation<TextureRegion>());
-		playerAnimations.put("backwardWalk", new Animation<TextureRegion>());
-		playerAnimations.put("leftWalk", new Animation<TextureRegion>());
-		playerAnimations.put("rightWalk", new Animation<TextureRegion>());
+		float frameDuration = 0.25f;
+		playerAnimations.put("upWalk", new Animation<TextureRegion>(frameDuration, animationSprites[0])); // TODO: Why can't the animation.playmode constructor be accepted here?
+		playerAnimations.put("rightWalk", new Animation<TextureRegion>(frameDuration, animationSprites[1]));
+		playerAnimations.put("downWalk", new Animation<TextureRegion>(frameDuration, animationSprites[2]));
+		playerAnimations.put("leftWalk", new Animation<TextureRegion>(frameDuration, animationSprites[3]));
 		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"), playerAnimations);
 		sprite.setPosition(4, 16);
 		sprite.setSize(1, 2);
@@ -123,7 +131,6 @@ public class GameScreen extends InputAdapter implements Screen {
 		game.batch.setProjectionMatrix(camera.combined);
 
 		game.batch.begin();
-		sprite.draw(game.batch);
 
 		// Handle player movement
 		playerMovement.handleMovement();
@@ -134,8 +141,13 @@ public class GameScreen extends InputAdapter implements Screen {
 		// Draw green rect until player is done moving
 		if (playerMovement.isMoving()) {
 			game.batch.draw(selectedSuccessRect, Math.round(touchPos.x), Math.round(touchPos.y), 1, 1);
+			String moveDirection = playerMovement.getMoveDirection();
+			sprite.playAnimation(moveDirection + "Walk");
+		} else {
+			//sprite.stopAnimation();
 		}
 
+		sprite.draw(game.batch);
 
 
 		game.batch.end();

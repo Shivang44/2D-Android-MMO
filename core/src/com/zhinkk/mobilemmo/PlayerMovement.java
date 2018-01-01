@@ -27,6 +27,7 @@ public class PlayerMovement {
     private GraphNode path;
     private float timeSinceStartedMoving;
     private static double movementSpeed = 0.5;
+    private String previousDirection;
 
 
     /* Constructor sets up the player sprite, target position, and starting position. */
@@ -262,6 +263,26 @@ public class PlayerMovement {
     // Simply returns whether player is currently moving
     public boolean isMoving() {
         return this.moving;
+    }
+
+    public String getMoveDirection() {
+        if (path.getParent() == null) {
+            return previousDirection;
+        }
+
+        if (path.getParent().getX() > previousTile.getX()) {
+            previousDirection = "right";
+            return previousDirection;
+        } else if (path.getParent().getX() < previousTile.getX()) {
+            previousDirection = "left";
+            return previousDirection;
+        } else if (path.getParent().getY() > previousTile.getY()) {
+            previousDirection = "up";
+            return previousDirection;
+        } else {
+            previousDirection = "down";
+            return previousDirection;
+        }
     }
 
     // Starts the movement process

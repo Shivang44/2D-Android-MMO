@@ -17,13 +17,13 @@ public class Sprite extends com.badlogic.gdx.graphics.g2d.Sprite {
     Texture idleTexture;
 
     public Sprite(Texture idleTexture, ObjectMap<String, Animation<TextureRegion>> animationMap) {
-        super();
+        super(idleTexture);
         this.animationMap = animationMap;
         this.idleTexture = idleTexture;
     }
 
     public void playAnimation(String animationName) {
-        TextureRegion currentFrame = animationMap.get(animationName).getKeyFrame(animationTime);
+        TextureRegion currentFrame = animationMap.get(animationName).getKeyFrame(animationTime, true);
         this.setRegion(currentFrame);   // TODO: Does this do what it seems? https://stackoverflow.com/questions/35135667/how-to-convert-a-textureregion-to-a-texture-to-set-a-sprites-texture
         animationTime += Gdx.graphics.getDeltaTime();
     }
