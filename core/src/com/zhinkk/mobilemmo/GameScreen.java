@@ -74,7 +74,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		// Constructs a new OrthographicCamera, using the given viewport width and height
 		// Height is multiplied by aspect ratio.
 		camera = new OrthographicCamera();
-		viewport = new ExtendViewport(12, 12, camera);
+		viewport = new ExtendViewport(11, 11, camera);
 
 		// Render tile map and its layers
 		// 1/32 unit-scale allows us to map one "world unit" to exactly 1 32x32 tile.
@@ -100,14 +100,13 @@ public class GameScreen extends InputAdapter implements Screen {
 				animationSheetTexture.getWidth() / ANIMATION_SHEET_COLS, animationSheetTexture.getHeight() / ANIMATION_SHEET_ROWS);
 		ObjectMap<String, Animation<TextureRegion>> playerAnimations = new ObjectMap<String, Animation<TextureRegion>>();
 		float frameDuration = 0.25f;
-		playerAnimations.put("upWalk", new Animation<TextureRegion>(frameDuration, animationSprites[0])); // TODO: Why can't the animation.playmode constructor be accepted here?
+		playerAnimations.put("upWalk", new Animation<TextureRegion>(frameDuration, animationSprites[0]));
 		playerAnimations.put("rightWalk", new Animation<TextureRegion>(frameDuration, animationSprites[1]));
 		playerAnimations.put("downWalk", new Animation<TextureRegion>(frameDuration, animationSprites[2]));
 		playerAnimations.put("leftWalk", new Animation<TextureRegion>(frameDuration, animationSprites[3]));
 		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"), playerAnimations);
 		sprite.setPosition(4, 16);
 		sprite.setSize(1.5f, 2);
-
 	}
 
 

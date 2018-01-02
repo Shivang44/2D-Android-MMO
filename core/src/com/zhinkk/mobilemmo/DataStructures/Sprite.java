@@ -22,14 +22,15 @@ public class Sprite extends com.badlogic.gdx.graphics.g2d.Sprite {
         this.idleTexture = idleTexture;
     }
 
+    /* Sets the region of the animation sheet to match the current animation. */
     public void playAnimation(String animationName) {
         TextureRegion currentFrame = animationMap.get(animationName).getKeyFrame(animationTime, true);
         this.setRegion(currentFrame);
         animationTime += Gdx.graphics.getDeltaTime();
     }
 
+    /* Sets the region to the "idle" animation. */
     public void stopAnimation() {
-        // TODO: Do we need to clear the previous setRegion call somehow before setting the texture again?
         this.setRegion(animationMap.get("downWalk").getKeyFrame(0.40f));
     }
 
