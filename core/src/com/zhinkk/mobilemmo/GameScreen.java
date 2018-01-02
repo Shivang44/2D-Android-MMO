@@ -106,7 +106,7 @@ public class GameScreen extends InputAdapter implements Screen {
 		playerAnimations.put("leftWalk", new Animation<TextureRegion>(frameDuration, animationSprites[3]));
 		sprite = new Sprite((Texture) assetManager.get("sprites/sprite.png"), playerAnimations);
 		sprite.setPosition(4, 16);
-		sprite.setSize(1, 2);
+		sprite.setSize(1.5f, 2);
 
 	}
 
@@ -144,7 +144,7 @@ public class GameScreen extends InputAdapter implements Screen {
 			String moveDirection = playerMovement.getMoveDirection();
 			sprite.playAnimation(moveDirection + "Walk");
 		} else {
-			//sprite.stopAnimation();
+			sprite.stopAnimation();
 		}
 
 		sprite.draw(game.batch);

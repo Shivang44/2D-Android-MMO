@@ -3,6 +3,7 @@ package com.zhinkk.mobilemmo;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 //import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Vector2;
 import com.zhinkk.mobilemmo.DataStructures.Sprite;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.utils.Array;
@@ -28,6 +29,7 @@ public class PlayerMovement {
     private float timeSinceStartedMoving;
     private static double movementSpeed = 0.5;
     private String previousDirection;
+    private Vector2 previousPosition;
 
 
     /* Constructor sets up the player sprite, target position, and starting position. */
@@ -36,6 +38,8 @@ public class PlayerMovement {
         this.moving = false;
         this.targetPos = new Tile();
         this.startingPos = new Tile();
+        this.previousPosition = new Vector2(playerSprite.getX(), playerSprite.getY());
+
     }
 
     /*
@@ -266,6 +270,20 @@ public class PlayerMovement {
     }
 
     public String getMoveDirection() {
+        if (previousPosition.x < playerSprite.getX()) {
+            previousDirection = "right";
+        } else if (previousPosition.x > playerSprite.getX()) {
+            previousDirection = "left";
+        } else if (previousPosition.y < playerSprite.getY()) {
+            previousDirection = "up";
+        } else if (previousPosition.y > playerSprite.getY()) {
+            previousDirection = "down";
+        }
+
+        previousPosition.set(playerSprite.getX(), playerSprite.getY());
+        return previousDirection;
+
+       /*
         if (path.getParent() == null) {
             return previousDirection;
         }
@@ -283,6 +301,7 @@ public class PlayerMovement {
             previousDirection = "down";
             return previousDirection;
         }
+        */
     }
 
     // Starts the movement process
