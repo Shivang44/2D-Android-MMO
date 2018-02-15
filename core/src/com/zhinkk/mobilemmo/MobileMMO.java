@@ -26,7 +26,7 @@ public class MobileMMO extends Game {
         // Generate Open Sans font, size 12, for use in app.
         generator = new FreeTypeFontGenerator(Gdx.files.internal("fonts/open-sans/OpenSans-Regular.ttf"));
         parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = 22;
+        parameter.size = 100;
         font12 = generator.generateFont(parameter);
         generator.dispose();
 
